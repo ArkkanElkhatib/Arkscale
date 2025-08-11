@@ -6,7 +6,7 @@ def upscale_img(image_file, upscale_level):
     with Image.open(image_file) as img:
         img.save('base_img.png', 'png')
 
-        model = EdsrModel.from_pretrained('eugenesiow/edsr', scale=upscale_level)
+        model = EdsrModel.from_pretrained('eugenesiow/edsr-base', scale=upscale_level)
         inputs = ImageLoader.load_image(img)
         preds = model(inputs)
 

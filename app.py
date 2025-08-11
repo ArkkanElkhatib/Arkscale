@@ -3,8 +3,23 @@ from img_upscaler import upscale_img
 from streamlit_image_comparison import image_comparison
 from PIL import Image
 import os
+import threading
+from threading import Thread
 
-favicon = Image.open('AE.png')
+class CustomThread(Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs={}, verbose=None):
+        super().__init__(group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        if self._target is not None:
+            self._return = self._target(*self._args, **self._kwargs)
+
+    def join(self):
+        super().join()
+        return self._return
+
+favicon = Image.open('public/AE.png')
 
 st.set_page_config(
     page_title='Arkscale - AI Image Upscaler',
@@ -14,6 +29,7 @@ st.set_page_config(
 st.title('Arkscale - AI Image Upscaler')
 st.write('Effortlessly upscale your images for free using AI!')
 st.write('Currently supporting **2x**, **3x** and **4x** upscales')
+st.write('Due to _computational_ (financial) restraints, please only upscale images < 100kb in size')
 
 uploaded_file = st.file_uploader(
     'Upload your image',
@@ -34,7 +50,12 @@ if uploaded_file is not None:
     )
 
     if st.button('Upscale'):
-        ret = upscale_img(uploaded_file, int(output_scale[0]))
+        t = CustomThread(target=upscale_img, args=(uploaded_file, int(output_scale[0])))
+
+        t.start()
+        st.spinner(text='Upscaling Image... Please wait...')
+        ret = t.join()
+        st.success('Upscaling complete!')
 
         upscaled_image = ret[0]
         comparison_image = ret[1]
